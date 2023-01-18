@@ -20,45 +20,45 @@ const celciusText = document.querySelector('.celciusText');
 locationBtn.addEventListener('click', getWeatherData);
 searchBtn.addEventListener('click', searchLocation);
 const cityInfo = document.querySelector('.cityInfo');
-async function fetchData(latitude,longitude){
+async function fetchData(latitude, longitude) {
     const getUrl = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=3f48274a20bac99a1e52fb12652e7fdc`, { mode: 'cors' })
     const data = await getUrl.json();
     return data;
 }
-async function MinTempData(data){
+async function MinTempData(data) {
     const minTemp1 = (await data.list[8].main.temp_min - 273).toFixed(2);
     const minTemp2 = (await data.list[16].main.temp_min - 273).toFixed(2);
     const minTemp3 = (await data.list[24].main.temp_min - 273).toFixed(2);
     const minTemp4 = (await data.list[30].main.temp_min - 273).toFixed(2);
     const minTemp5 = (await data.list[36].main.temp_min - 273).toFixed(2);
     const minTempArray = [
-        minTemp1,minTemp2,minTemp3,minTemp4,minTemp5
+        minTemp1, minTemp2, minTemp3, minTemp4, minTemp5
     ]
     return minTempArray;
 }
-async function maxTempData(data){
+async function maxTempData(data) {
     const maxTemp1 = (await data.list[8].main.temp_max - 273).toFixed(2);
     const maxTemp2 = (await data.list[16].main.temp_max - 273).toFixed(2);
     const maxTemp3 = (await data.list[24].main.temp_max - 273).toFixed(2);
     const maxTemp4 = (await data.list[30].main.temp_max - 273).toFixed(2);
     const maxTemp5 = (await data.list[36].main.temp_max - 273).toFixed(2);
     const maxTempArray = [
-        maxTemp1,maxTemp2,maxTemp3,maxTemp4,maxTemp5
+        maxTemp1, maxTemp2, maxTemp3, maxTemp4, maxTemp5
     ]
     return maxTempArray;
 }
-async function weatherIconsData(data){
+async function weatherIconsData(data) {
     const weatherIconImg1 = await data.list[8].weather[0].icon;
     const weatherIconImg2 = await data.list[16].weather[0].icon;
     const weatherIconImg3 = await data.list[24].weather[0].icon;
     const weatherIconImg4 = await data.list[30].weather[0].icon;
     const weatherIconImg5 = await data.list[36].weather[0].icon;
     const weatherIconArray = [
-        weatherIconImg1,weatherIconImg2,weatherIconImg3,weatherIconImg4,weatherIconImg5
+        weatherIconImg1, weatherIconImg2, weatherIconImg3, weatherIconImg4, weatherIconImg5
     ]
     return weatherIconArray;
 }
-async function renderData(data){
+async function renderData(data) {
     const imgId = await data.list[0].weather[0].icon;
     const todayTemp = (await data.list[0].main.feels_like - 273).toFixed(2);
     const tempDetail = await data.list[0].weather[0].description;
@@ -77,29 +77,32 @@ async function renderData(data){
     todayWeatherImg.setAttribute('src', `http://openweathermap.org/img/wn/${imgId}@2x.png`);
     cityInfo.textContent = data.city.name;
 }
+async function renderFutureData(data) {
+    let weathericonsArray = await weatherIconsData(data);
+    let minTempArray = await MinTempData(data);
+    let maxTempArray = await maxTempData(data);
+    for (let i = 0; i <= 5; i++) {
+        minTemp[i].textContent = minTempArray[i];
+        maxTemp[i].textContent = maxTempArray[i];
+        futureCastImg[i].setAttribute('src', `http://openweathermap.org/img/wn/${weathericonsArray[i]}@2x.png`);
+    }
+}
 async function getWeatherData() {
     const weatherInfo = async (location) => {
         location = await location;
         const longitude = await location.coords.longitude;
         const latitude = await location.coords.latitude;
-        let data = await fetchData(latitude,longitude);
-        let weathericonsArray = await weatherIconsData(data);
-        let minTempArray = await MinTempData(data);
-        let maxTempArray = await maxTempData(data);
+        let data = await fetchData(latitude, longitude);
         renderData(data);
-        console.log(data);
         celciusBtn.click();
-        for (let i = 0; i <= 5; i++) {
-            minTemp[i].textContent = minTempArray[i];
-            maxTemp[i].textContent = maxTempArray[i];
-            futureCastImg[i].setAttribute('src', `http://openweathermap.org/img/wn/${weathericonsArray[i]}@2x.png`);
-        }
+        renderFutureData(data);
     }
     let failure = (err) => {
         console.log(err);
     }
     navigator.geolocation.getCurrentPosition(weatherInfo, failure);
 }
+
 async function searchLocation() {
     try {
         const userData = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${inputLocation.value}&APPID=3f48274a20bac99a1e52fb12652e7fdc`, { mode: 'cors' })
@@ -107,22 +110,15 @@ async function searchLocation() {
         const latitude = jsonData.coord.lat
         const longitude = jsonData.coord.lon
         let data = await fetchData(latitude, longitude);
-        let weathericonsArray = await weatherIconsData(data)
-        let minTempArray = await MinTempData(data)
-        let maxTempArray = await maxTempData(data)
         renderData(data);
-        celciusBtn.click()
-        console.log(data);
-        for (let i = 0; i <= 5; i++) {
-            minTemp[i].textContent = minTempArray[i];
-            maxTemp[i].textContent = maxTempArray[i];
-            futureCastImg[i].setAttribute('src', `http://openweathermap.org/img/wn/${weathericonsArray[i]}@2x.png`);
-        }
+        celciusBtn.click();
+        renderFutureData(data)
     }
     catch {
         console.log('not found')
     }
 }
+
 const searchHistoryContainer = document.querySelector('.searchHistoryContainer');
 searchBtn.addEventListener('click', () => {
     let searchText = document.createElement('div');
@@ -146,22 +142,14 @@ searchHistoryContainer.addEventListener('click', async (e) => {
         const latitude = jsonData.coord.lat;
         const longitude = jsonData.coord.lon;
         let data = await fetchData(latitude, longitude);
-        let weathericonsArray = await weatherIconsData(data)
-        let minTempArray = await MinTempData(data)
-        let maxTempArray = await maxTempData(data)
-        renderData(data)
-        console.log(data);
-        celciusBtn.click()
-        for (let i = 0; i <= 5; i++) {
-            minTemp[i].textContent = minTempArray[i];
-            maxTemp[i].textContent = maxTempArray[i];
-            futureCastImg[i].setAttribute('src', `http://openweathermap.org/img/wn/${weathericonsArray[i]}@2x.png`);
-        }
+        renderData(data);
+        celciusBtn.click();
+        renderFutureData(data);
     }
     catch {
         console.log('not found')
     }
-})
+});
 const cancelBtn = document.querySelector('.cancelBtn');
 const searchForPlacesBtn = document.querySelector('.searchBtn');
 const firstPage = document.querySelector('#firstPage');
@@ -184,7 +172,7 @@ celciusBtn.addEventListener('click', () => {
     todayTempDisplay.textContent = celcius.toFixed(2)
     celciusText.textContent = 'C';
     minTemp.forEach(temp => {
-        let celcius = (+temp.textContent - 32) * 5/9;
+        let celcius = (+temp.textContent - 32) * 5 / 9;
         temp.textContent = celcius.toFixed(2);
     });
     maxTemp.forEach(temp => {
@@ -214,7 +202,7 @@ farenheitBtn.addEventListener('click', () => {
     });
 });
 // time function;
-let setDate = (function() {
+let setDate = (function () {
     const currentDay = new Date()
     const thirdDay = new Date((new Date()).getTime() + (2 * 86400000));
     const fourthDay = new Date((new Date()).getTime() + (3 * 86400000));
